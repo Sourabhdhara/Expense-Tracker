@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Expense Tracker</h1>
+
+    <!-- 1. Balance Summary Box -->
+    <div class="summary-box">
+
+      <div class="summary-item">
+        <h3>Balance</h3>
+        <p id="balance-display">₹0.00</p>
+      </div>
+      <div class="summary-item">
+        <h3>Total Income</h3>
+        <p id="income-display" class="income-text">₹0.00</p>
+      </div>
+      <div class="summary-item">
+        <h3>Total Expense</h3>
+        <p id="expense-display" class="expense-text">₹0.00</p>
+      </div>
+      
+    </div>
+
+    <!-- 2. Form to Add a New Item -->
+    <div class="form-box">
+      <h2>Add New Transaction</h2>
+      <form id="transaction-form">
+        
+        <label for="text-input">Description:</label>
+        <input type="text" id="text-input" placeholder="e.g., College Books" required>
+
+        <label for="amount-input">Amount (₹):</label>
+        <input type="number" id="amount-input" placeholder="e.g., 250" min="1" step="any" required>
+
+        <label for="type-select">Type:</label>
+        <select id="type-select">
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+
+        <button type="submit" id="add-btn">Add Transaction</button>
+      </form>
+    </div>
+
+    <!-- 3. List of Transactions -->
+    <div class="history-box">
+      <h2>Transaction History</h2>
+      <ul id="transaction-list">
+        <!-- JavaScript will insert items here -->
+      </ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
