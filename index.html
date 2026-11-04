@@ -1,855 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Apex Spend - Expense Tracker</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom scrollbar styling */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.03);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(156, 163, 175, 0.5);
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(107, 114, 128, 0.8);
-    }
-    .fade-in {
-      animation: fadeIn 0.25s ease-out forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen antialiased flex flex-col transition-colors duration-200">
+<body>
 
   <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <div id="toast-container" class="toast-container"></div>
 
   <!-- Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
-          <i class="fa-solid fa-wallet text-lg"></i>
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <!-- Inline Offline SVG Wallet Icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+          </svg>
         </div>
         <div>
-          <h1 class="text-lg font-bold text-slate-900 tracking-tight leading-tight">Apex Spend</h1>
-          <p class="text-xs text-slate-500 font-medium">Smart Financial Ledger</p>
+          <h1>Apex Spend</h1>
+          <p>Smart Financial Ledger</p>
         </div>
       </div>
 
       <!-- Quick Actions / Currency selector -->
-      <div class="flex items-center gap-3">
-        <div class="flex items-center bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 border border-slate-200">
-          <label for="currency-symbol" class="mr-1.5">Currency:</label>
-          <select id="currency-symbol" class="bg-transparent focus:outline-none cursor-pointer font-bold text-slate-800">
+      <div class="header-actions">
+        <div class="currency-picker">
+          <label for="currency-symbol">Currency:</label>
+          <select id="currency-symbol">
+            <option value="₹" selected>₹ INR</option>
             <option value="$">$ USD</option>
             <option value="€">€ EUR</option>
             <option value="£">£ GBP</option>
-            <option value="₹">₹ INR</option>
             <option value="¥">¥ JPY</option>
           </select>
         </div>
-        <button id="export-csv-btn" title="Export transactions to CSV" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5 border border-slate-200">
-          <i class="fa-solid fa-download"></i>
-          <span class="hidden sm:inline">Export CSV</span>
+        <button id="export-csv-btn" class="btn btn-secondary" title="Export transactions to CSV">
+          <span>↓</span> Export CSV
         </button>
       </div>
     </div>
   </header>
 
   <!-- Main Content Layout -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+  <main class="main-wrapper">
     <!-- Balance & KPI Overview Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+    <section class="kpi-grid">
       <!-- Total Balance Card -->
-      <div class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
-        <div class="relative z-10">
-          <span class="text-xs font-semibold tracking-wider uppercase text-indigo-200">Net Balance</span>
-          <div id="total-balance" class="text-3xl font-extrabold mt-1 tracking-tight">$0.00</div>
+      <div class="kpi-card balance-card">
+        <div>
+          <span class="kpi-label">Net Balance</span>
+          <div id="total-balance" class="kpi-value">₹0.00</div>
         </div>
-        <div class="mt-4 flex items-center justify-between text-xs text-indigo-200 relative z-10">
-          <span id="savings-rate-badge" class="px-2 py-0.5 rounded-full bg-white/10 font-medium">Savings: 0%</span>
-          <span class="opacity-80">Updated real-time</span>
+        <div class="kpi-footer">
+          <span id="savings-rate-badge" class="badge">Savings: 0%</span>
+          <span class="muted-text">Updated real-time</span>
         </div>
-        <!-- Decorative blurred backdrop orb -->
-        <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none"></div>
       </div>
 
       <!-- Total Income Card -->
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+      <div class="kpi-card stat-card">
         <div>
-          <span class="text-xs font-semibold tracking-wider uppercase text-slate-400">Total Income</span>
-          <div id="total-income" class="text-2xl font-bold text-emerald-600 mt-1">+$0.00</div>
-          <p class="text-xs text-slate-400 mt-1" id="income-count">0 transactions</p>
+          <span class="kpi-label">Total Income</span>
+          <div id="total-income" class="kpi-value text-emerald">+₹0.00</div>
+          <p class="kpi-subtext" id="income-count">0 transactions</p>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-          <i class="fa-solid fa-arrow-trend-up"></i>
-        </div>
+        <div class="stat-icon income-icon">↗</div>
       </div>
 
       <!-- Total Expense Card -->
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+      <div class="kpi-card stat-card">
         <div>
-          <span class="text-xs font-semibold tracking-wider uppercase text-slate-400">Total Expenses</span>
-          <div id="total-expense" class="text-2xl font-bold text-rose-600 mt-1">-$0.00</div>
-          <p class="text-xs text-slate-400 mt-1" id="expense-count">0 transactions</p>
+          <span class="kpi-label">Total Expenses</span>
+          <div id="total-expense" class="kpi-value text-rose">-₹0.00</div>
+          <p class="kpi-subtext" id="expense-count">0 transactions</p>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
-          <i class="fa-solid fa-arrow-trend-down"></i>
-        </div>
+        <div class="stat-icon expense-icon">↘</div>
       </div>
     </section>
 
-    <!-- Main Workspace: Form & Analytics (Left Column) vs Ledger History (Right Column) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Main Workspace -->
+    <div class="workspace-grid">
       
       <!-- Left Column: Add Entry & Category Analytics -->
-      <div class="lg:col-span-5 space-y-6">
+      <div class="sidebar-col">
         
         <!-- Add Transaction Form -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-circle-plus text-indigo-600"></i>
-            Add Transaction
-          </h2>
+        <div class="panel-card">
+          <h2 class="panel-title">Add Transaction</h2>
 
-          <form id="transaction-form" class="space-y-4">
+          <form id="transaction-form">
             <!-- Type Toggle Radio -->
-            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
-              <label class="cursor-pointer text-center">
-                <input type="radio" name="entry-type" value="expense" class="peer sr-only" checked>
-                <div class="py-2 text-xs font-semibold rounded-lg text-slate-600 transition peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm">
-                  <i class="fa-solid fa-minus-circle mr-1"></i> Expense
-                </div>
+            <div class="type-segmented-control">
+              <label class="segment-option">
+                <input type="radio" name="entry-type" value="expense" checked />
+                <span class="segment-btn expense-btn">− Expense</span>
               </label>
-              <label class="cursor-pointer text-center">
-                <input type="radio" name="entry-type" value="income" class="peer sr-only">
-                <div class="py-2 text-xs font-semibold rounded-lg text-slate-600 transition peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm">
-                  <i class="fa-solid fa-plus-circle mr-1"></i> Income
-                </div>
+              <label class="segment-option">
+                <input type="radio" name="entry-type" value="income" />
+                <span class="segment-btn income-btn">+ Income</span>
               </label>
             </div>
 
             <!-- Title / Description -->
-            <div>
-              <label for="trans-title" class="block text-xs font-medium text-slate-700 mb-1">Description</label>
-              <input type="text" id="trans-title" required placeholder="e.g. Grocery Store, Paycheck" 
-                class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            <div class="form-group">
+              <label for="trans-title">Description</label>
+              <input type="text" id="trans-title" required placeholder="e.g. Mess Food, Semester Books, Project Stipend" />
             </div>
 
             <!-- Amount and Category -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label for="trans-amount" class="block text-xs font-medium text-slate-700 mb-1">Amount</label>
-                <div class="relative">
-                  <span id="form-currency-label" class="absolute left-3.5 top-2.5 text-sm font-semibold text-slate-400">$</span>
-                  <input type="number" id="trans-amount" step="0.01" min="0.01" required placeholder="0.00" 
-                    class="w-full pl-8 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition font-medium">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="trans-amount">Amount</label>
+                <div class="input-with-prefix">
+                  <span id="form-currency-label" class="currency-prefix">₹</span>
+                  <input type="number" id="trans-amount" step="0.01" min="0.01" required placeholder="0.00" />
                 </div>
               </div>
 
-              <div>
-                <label for="trans-category" class="block text-xs font-medium text-slate-700 mb-1">Category</label>
-                <select id="trans-category" required class="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                  <!-- Dynamically populated or default options -->
-                  <option value="Food & Dining">🍔 Food & Dining</option>
-                  <option value="Housing & Rent">🏠 Housing & Rent</option>
-                  <option value="Transportation">🚗 Transportation</option>
-                  <option value="Utilities">💡 Utilities</option>
-                  <option value="Entertainment">🎬 Entertainment</option>
-                  <option value="Healthcare">💊 Healthcare</option>
-                  <option value="Shopping">🛍️ Shopping</option>
-                  <option value="Salary">💼 Salary / Wages</option>
-                  <option value="Investment">📈 Investment</option>
-                  <option value="Other">✨ Other</option>
+              <div class="form-group flex-1">
+                <label for="trans-category">Category</label>
+                <select id="trans-category" required>
+                  <option value="Food & Dining">Food & Dining</option>
+                  <option value="College & Studies">College & Studies</option>
+                  <option value="Transportation">Transportation</option>
+                  <option value="Rent & Housing">Rent & Housing</option>
+                  <option value="Utilities">Utilities & Bills</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Salary / Allowance">Salary / Allowance</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
 
             <!-- Date -->
-            <div>
-              <label for="trans-date" class="block text-xs font-medium text-slate-700 mb-1">Date</label>
-              <input type="date" id="trans-date" required
-                class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-slate-700">
+            <div class="form-group">
+              <label for="trans-date">Date</label>
+              <input type="date" id="trans-date" required />
             </div>
 
-            <button type="submit" class="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-100 transition flex items-center justify-center gap-2">
-              <i class="fa-solid fa-plus text-xs"></i> Record Transaction
-            </button>
+            <button type="submit" class="btn btn-primary submit-btn">+ Record Transaction</button>
           </form>
         </div>
 
         <!-- Expense Category Breakdown Card -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-chart-pie text-indigo-600"></i>
-              Expense Breakdown
-            </h2>
-            <span class="text-xs text-slate-400 font-medium">By Category</span>
+        <div class="panel-card">
+          <div class="panel-header-inline">
+            <h2 class="panel-title">Expense Breakdown</h2>
+            <span class="muted-tag">By Category</span>
           </div>
 
-          <div id="category-breakdown-container" class="space-y-3.5">
-            <!-- Dynamic Category progress bars inserted via JS -->
-            <p class="text-xs text-slate-400 italic text-center py-4">No expense records found yet.</p>
+          <div id="category-breakdown-container" class="breakdown-list">
+            <p class="empty-hint">No expense records found yet.</p>
           </div>
         </div>
       </div>
 
       <!-- Right Column: Ledger, Search & Filters -->
-      <div class="lg:col-span-7 flex flex-col space-y-4">
+      <div class="ledger-col">
         
         <!-- Filter Controls Bar -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <div class="flex flex-col sm:flex-row gap-3">
-            <!-- Search Input -->
-            <div class="relative flex-grow">
-              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-              <input type="text" id="search-input" placeholder="Search by title..." 
-                class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-            </div>
-
-            <!-- Type Filter Buttons -->
-            <div class="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
-              <button data-type-filter="all" class="type-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-indigo-700 shadow-sm transition">All</button>
-              <button data-type-filter="income" class="type-filter-btn px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg transition">Income</button>
-              <button data-type-filter="expense" class="type-filter-btn px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg transition">Expense</button>
+        <div class="panel-card filter-panel">
+          <div class="search-row">
+            <input type="text" id="search-input" class="search-input" placeholder="Search by description or category..." />
+            
+            <div class="type-filter-group">
+              <button class="type-filter-btn active" data-type-filter="all">All</button>
+              <button class="type-filter-btn" data-type-filter="income">Income</button>
+              <button class="type-filter-btn" data-type-filter="expense">Expense</button>
             </div>
           </div>
 
-          <!-- Secondary Filters: Category & Sort -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-100 text-xs">
-            <div>
-              <select id="filter-category" class="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none">
-                <option value="all">All Categories</option>
-                <option value="Food & Dining">Food & Dining</option>
-                <option value="Housing & Rent">Housing & Rent</option>
-                <option value="Transportation">Transportation</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Shopping">Shopping</option>
-                <option value="Salary">Salary / Wages</option>
-                <option value="Investment">Investment</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+          <div class="secondary-filters">
+            <select id="filter-category" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="Food & Dining">Food & Dining</option>
+              <option value="College & Studies">College & Studies</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Rent & Housing">Rent & Housing</option>
+              <option value="Utilities">Utilities & Bills</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Salary / Allowance">Salary / Allowance</option>
+              <option value="Other">Other</option>
+            </select>
 
-            <div>
-              <select id="filter-sort" class="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 focus:outline-none">
-                <option value="date-desc">Newest First</option>
-                <option value="date-asc">Oldest First</option>
-                <option value="amount-desc">Highest Amount</option>
-                <option value="amount-asc">Lowest Amount</option>
-              </select>
-            </div>
+            <select id="filter-sort" class="filter-select">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="amount-desc">Highest Amount</option>
+              <option value="amount-asc">Lowest Amount</option>
+            </select>
 
-            <div class="col-span-2 sm:col-span-1 flex justify-end">
-              <button id="clear-filters-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1.5 flex items-center gap-1 transition">
-                <i class="fa-solid fa-rotate-left text-[10px]"></i> Reset Filters
-              </button>
-            </div>
+            <button id="clear-filters-btn" class="btn-text">Reset Filters</button>
           </div>
         </div>
 
-        <!-- Transaction Records Header with Bulk Controls -->
-        <div class="flex items-center justify-between px-1">
-          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-            <span>Transaction Activity</span>
-            <span id="filtered-count-badge" class="text-xs font-normal bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">0</span>
-          </h2>
-          <button id="clear-all-btn" class="text-xs font-semibold text-rose-500 hover:text-rose-700 transition flex items-center gap-1">
-            <i class="fa-regular fa-trash-can"></i> Clear All
-          </button>
+        <!-- Records Header -->
+        <div class="records-header">
+          <div class="records-title-wrap">
+            <span class="records-title">Transaction Activity</span>
+            <span id="filtered-count-badge" class="count-badge">0</span>
+          </div>
+          <button id="clear-all-btn" class="btn-clear-all">Clear All</button>
         </div>
 
         <!-- Transactions Container -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <ul id="transactions-list" class="divide-y divide-slate-100 max-h-[580px] overflow-y-auto">
-            <!-- Dynamic entries injected here -->
-          </ul>
+        <div class="panel-card list-panel">
+          <ul id="transactions-list" class="transactions-list"></ul>
 
           <!-- Empty State -->
-          <div id="empty-state" class="hidden py-12 px-4 flex flex-col items-center justify-center text-center">
-            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-2xl mb-3">
-              <i class="fa-solid fa-receipt"></i>
-            </div>
-            <h3 class="text-sm font-bold text-slate-800">No Transactions Found</h3>
-            <p class="text-xs text-slate-500 mt-1 max-w-xs">
-              No matching records found. Create a new transaction or adjust your active filters.
-            </p>
+          <div id="empty-state" class="empty-state hidden">
+            <div class="empty-icon">📋</div>
+            <h3>No Transactions Found</h3>
+            <p>No matching records found. Create a new transaction or reset filters.</p>
           </div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Confirm Modal (Replacement for window.confirm) -->
-  <div id="modal-container" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-      <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+  <!-- Modal Confirmation Dialog -->
+  <div id="modal-container" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-body">
+        <h3 id="modal-title">Clear all transactions?</h3>
+        <p id="modal-desc">This will permanently delete all stored transactions from local storage. This action cannot be undone.</p>
       </div>
-      <div>
-        <h3 id="modal-title" class="text-base font-bold text-slate-900">Are you sure?</h3>
-        <p id="modal-desc" class="text-xs text-slate-500 mt-1">This will permanently delete all stored transactions. This action cannot be undone.</p>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button id="modal-cancel-btn" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
-        <button id="modal-confirm-btn" class="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow transition">Delete All</button>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="modal-confirm-btn" class="btn btn-danger">Delete All</button>
       </div>
     </div>
   </div>
 
-  <!-- Application Logic -->
-  <script>
-    // State Management
-    let transactions = [];
-    let currentCurrency = '$';
-    let filterType = 'all';
-    let searchTerm = '';
-    let filterCategory = 'all';
-    let sortBy = 'date-desc';
-
-    // Preset icons for categories
-    const categoryIcons = {
-      'Food & Dining': 'fa-burger',
-      'Housing & Rent': 'fa-house',
-      'Transportation': 'fa-car-side',
-      'Utilities': 'fa-bolt',
-      'Entertainment': 'fa-film',
-      'Healthcare': 'fa-notes-medical',
-      'Shopping': 'fa-bag-shopping',
-      'Salary': 'fa-money-bill-wave',
-      'Investment': 'fa-chart-line',
-      'Other': 'fa-shapes'
-    };
-
-    // Category Color Palette for visual bars
-    const categoryColors = [
-      'bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 
-      'bg-rose-500', 'bg-cyan-500', 'bg-fuchsia-500', 
-      'bg-violet-500', 'bg-orange-500', 'bg-teal-500'
-    ];
-
-    // DOM Elements
-    const form = document.getElementById('transaction-form');
-    const transTitle = document.getElementById('trans-title');
-    const transAmount = document.getElementById('trans-amount');
-    const transCategory = document.getElementById('trans-category');
-    const transDate = document.getElementById('trans-date');
-    const transactionsList = document.getElementById('transactions-list');
-    const emptyState = document.getElementById('empty-state');
-    const totalBalance = document.getElementById('total-balance');
-    const totalIncome = document.getElementById('total-income');
-    const totalExpense = document.getElementById('total-expense');
-    const incomeCount = document.getElementById('income-count');
-    const expenseCount = document.getElementById('expense-count');
-    const savingsRateBadge = document.getElementById('savings-rate-badge');
-    const searchInput = document.getElementById('search-input');
-    const categoryFilter = document.getElementById('filter-category');
-    const sortFilter = document.getElementById('filter-sort');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    const clearAllBtn = document.getElementById('clear-all-btn');
-    const categoryBreakdownContainer = document.getElementById('category-breakdown-container');
-    const currencySelector = document.getElementById('currency-symbol');
-    const formCurrencyLabel = document.getElementById('form-currency-label');
-    const filteredCountBadge = document.getElementById('filtered-count-badge');
-    const exportCsvBtn = document.getElementById('export-csv-btn');
-
-    // Custom Modal elements
-    const modalContainer = document.getElementById('modal-container');
-    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-    const modalCancelBtn = document.getElementById('modal-cancel-btn');
-
-    // Initialize Default Date to Today
-    transDate.valueAsDate = new Date();
-
-    // Helper: Toast Notifications
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      const isSuccess = type === 'success';
-      const isDanger = type === 'danger';
-
-      toast.className = `px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg text-white transform transition-all duration-300 translate-y-2 opacity-0 flex items-center gap-2 pointer-events-auto ${
-        isDanger ? 'bg-rose-600' : isSuccess ? 'bg-emerald-600' : 'bg-slate-800'
-      }`;
-
-      const icon = isDanger ? 'fa-circle-xmark' : isSuccess ? 'fa-circle-check' : 'fa-circle-info';
-      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
-      container.appendChild(toast);
-
-      // Trigger animation
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      });
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 2600);
-    }
-
-    // Helper: Format Currency
-    function formatCurrency(amount) {
-      return `${currentCurrency}${Number(amount).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })}`;
-    }
-
-    // Load from LocalStorage
-    function loadTransactions() {
-      try {
-        const stored = localStorage.getItem('apex_spend_transactions');
-        const storedCurrency = localStorage.getItem('apex_spend_currency');
-        if (stored) transactions = JSON.parse(stored);
-        if (storedCurrency) {
-          currentCurrency = storedCurrency;
-          currencySelector.value = currentCurrency;
-          formCurrencyLabel.textContent = currentCurrency;
-        }
-      } catch (err) {
-        console.error('Failed to parse stored transactions:', err);
-        transactions = [];
-      }
-    }
-
-    // Save to LocalStorage
-    function saveTransactions() {
-      localStorage.setItem('apex_spend_transactions', JSON.stringify(transactions));
-      localStorage.setItem('apex_spend_currency', currentCurrency);
-    }
-
-    // Calculate Summary and Category Analytics
-    function updateMetrics() {
-      let incomeSum = 0;
-      let expenseSum = 0;
-      let incCount = 0;
-      let expCount = 0;
-      const expenseByCategory = {};
-
-      transactions.forEach(t => {
-        const amt = Number(t.amount);
-        if (t.type === 'income') {
-          incomeSum += amt;
-          incCount++;
-        } else {
-          expenseSum += amt;
-          expCount++;
-          expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + amt;
-        }
-      });
-
-      const netBalance = incomeSum - expenseSum;
-
-      // Update Header KPIs
-      totalBalance.textContent = (netBalance < 0 ? '-' : '') + formatCurrency(Math.abs(netBalance));
-      totalIncome.textContent = `+${formatCurrency(incomeSum)}`;
-      totalExpense.textContent = `-${formatCurrency(expenseSum)}`;
-      incomeCount.textContent = `${incCount} record${incCount === 1 ? '' : 's'}`;
-      expenseCount.textContent = `${expCount} record${expCount === 1 ? '' : 's'}`;
-
-      // Calculate Savings Rate %
-      const savingsRate = incomeSum > 0 ? Math.round(((incomeSum - expenseSum) / incomeSum) * 100) : 0;
-      savingsRateBadge.textContent = `Savings: ${savingsRate}%`;
-
-      // Update Expense Category Breakdown Visualization
-      renderCategoryBreakdown(expenseByCategory, expenseSum);
-    }
-
-    // Render Category Breakdown Progress Bars
-    function renderCategoryBreakdown(expenseMap, totalExp) {
-      categoryBreakdownContainer.innerHTML = '';
-      const categories = Object.keys(expenseMap);
-
-      if (categories.length === 0 || totalExp === 0) {
-        categoryBreakdownContainer.innerHTML = `
-          <div class="py-6 text-center text-xs text-slate-400">
-            <i class="fa-solid fa-chart-simple text-slate-300 text-2xl mb-1.5 block"></i>
-            No expenses recorded yet.
-          </div>
-        `;
-        return;
-      }
-
-      // Sort categories from highest spending to lowest
-      categories.sort((a, b) => expenseMap[b] - expenseMap[a]);
-
-      categories.forEach((cat, idx) => {
-        const amount = expenseMap[cat];
-        const percent = ((amount / totalExp) * 100).toFixed(1);
-        const colorClass = categoryColors[idx % categoryColors.length];
-
-        const row = document.createElement('div');
-        row.className = 'space-y-1.5 text-xs';
-        row.innerHTML = `
-          <div class="flex justify-between items-center text-slate-700">
-            <span class="font-semibold flex items-center gap-1.5 truncate">
-              <span class="w-2 h-2 rounded-full ${colorClass}"></span>
-              <span class="truncate">${cat}</span>
-            </span>
-            <span class="font-bold text-slate-800">${formatCurrency(amount)} <span class="text-[10px] text-slate-400 font-normal">(${percent}%)</span></span>
-          </div>
-          <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div class="${colorClass} h-2 rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
-          </div>
-        `;
-        categoryBreakdownContainer.appendChild(row);
-      });
-    }
-
-    // Filter, Sort and Render Transaction List
-    function renderTransactions() {
-      // Filter by type
-      let list = transactions.filter(item => {
-        if (filterType === 'all') return true;
-        return item.type === filterType;
-      });
-
-      // Filter by category
-      if (filterCategory !== 'all') {
-        list = list.filter(item => item.category === filterCategory);
-      }
-
-      // Filter by Search Query
-      if (searchTerm.trim() !== '') {
-        const query = searchTerm.toLowerCase();
-        list = list.filter(item => 
-          item.title.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query)
-        );
-      }
-
-      // Sort
-      list.sort((a, b) => {
-        if (sortBy === 'date-desc') return new Date(b.date) - new Date(a.date);
-        if (sortBy === 'date-asc') return new Date(a.date) - new Date(b.date);
-        if (sortBy === 'amount-desc') return Number(b.amount) - Number(a.amount);
-        if (sortBy === 'amount-asc') return Number(a.amount) - Number(b.amount);
-        return 0;
-      });
-
-      // Update Filter Counter Badge
-      filteredCountBadge.textContent = list.length;
-
-      // Toggle Empty State
-      transactionsList.innerHTML = '';
-      if (list.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-      } else {
-        emptyState.classList.add('hidden');
-      }
-
-      // Populate Transactions
-      list.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'p-4 hover:bg-slate-50 transition flex items-center justify-between group fade-in';
-
-        const isIncome = item.type === 'income';
-        const iconName = categoryIcons[item.category] || 'fa-receipt';
-
-        li.innerHTML = `
-          <div class="flex items-center gap-3.5 min-w-0">
-            <!-- Icon Avatar -->
-            <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-sm ${
-              isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-            }">
-              <i class="fa-solid ${iconName}"></i>
-            </div>
-            
-            <!-- Details -->
-            <div class="min-w-0">
-              <h4 class="text-sm font-semibold text-slate-900 truncate">${escapeHTML(item.title)}</h4>
-              <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
-                <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium text-[11px]">${escapeHTML(item.category)}</span>
-                <span>•</span>
-                <span>${formatDisplayDate(item.date)}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Amount and Action Button -->
-          <div class="flex items-center gap-3 ml-2 flex-shrink-0">
-            <span class="text-sm font-bold ${isIncome ? 'text-emerald-600' : 'text-rose-600'}">
-              ${isIncome ? '+' : '-'}${formatCurrency(item.amount)}
-            </span>
-            <button data-id="${item.id}" class="delete-trans-btn text-slate-300 hover:text-rose-600 p-1.5 rounded-lg transition hover:bg-rose-50" title="Delete Entry">
-              <i class="fa-regular fa-trash-can text-sm"></i>
-            </button>
-          </div>
-        `;
-        transactionsList.appendChild(li);
-      });
-    }
-
-    // Helper: Escape HTML
-    function escapeHTML(str) {
-      const p = document.createElement('p');
-      p.textContent = str;
-      return p.innerHTML;
-    }
-
-    // Helper: Format Date
-    function formatDisplayDate(dateStr) {
-      if (!dateStr) return '';
-      const date = new Date(dateStr + 'T00:00:00');
-      return date.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    }
-
-    // Event: Add Transaction
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const title = transTitle.value.trim();
-      const amount = parseFloat(transAmount.value);
-      const category = transCategory.value;
-      const date = transDate.value;
-      const type = document.querySelector('input[name="entry-type"]:checked').value;
-
-      if (!title || isNaN(amount) || amount <= 0 || !date) {
-        showToast('Please fill out all fields with valid values.', 'danger');
-        return;
-      }
-
-      const newTransaction = {
-        id: 'tx_' + Date.now() + Math.random().toString(36).substr(2, 4),
-        title,
-        amount: Number(amount.toFixed(2)),
-        category,
-        date,
-        type,
-        createdAt: new Date().toISOString()
-      };
-
-      transactions.unshift(newTransaction);
-      saveTransactions();
-      updateMetrics();
-      renderTransactions();
-
-      // Reset form fields
-      transTitle.value = '';
-      transAmount.value = '';
-      transDate.valueAsDate = new Date();
-      transTitle.focus();
-
-      showToast(`${type === 'income' ? 'Income' : 'Expense'} added successfully!`, 'success');
-    });
-
-    // Event: Delete individual transaction
-    transactionsList.addEventListener('click', (e) => {
-      const btn = e.target.closest('.delete-trans-btn');
-      if (!btn) return;
-
-      const id = btn.getAttribute('data-id');
-      transactions = transactions.filter(t => t.id !== id);
-      saveTransactions();
-      updateMetrics();
-      renderTransactions();
-      showToast('Transaction removed', 'info');
-    });
-
-    // Event: Clear All Transactions (Custom Modal Confirmation)
-    clearAllBtn.addEventListener('click', () => {
-      if (transactions.length === 0) {
-        showToast('No transactions to clear.', 'info');
-        return;
-      }
-      modalContainer.classList.remove('hidden');
-    });
-
-    modalCancelBtn.addEventListener('click', () => {
-      modalContainer.classList.add('hidden');
-    });
-
-    modalConfirmBtn.addEventListener('click', () => {
-      transactions = [];
-      saveTransactions();
-      updateMetrics();
-      renderTransactions();
-      modalContainer.classList.add('hidden');
-      showToast('All transaction records cleared.', 'danger');
-    });
-
-    // Event: Search
-    searchInput.addEventListener('input', (e) => {
-      searchTerm = e.target.value;
-      renderTransactions();
-    });
-
-    // Event: Type Filter buttons
-    const typeButtons = document.querySelectorAll('.type-filter-btn');
-    typeButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        typeButtons.forEach(b => {
-          b.className = 'type-filter-btn px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg transition';
-        });
-        btn.className = 'type-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-indigo-700 shadow-sm transition';
-        filterType = btn.getAttribute('data-type-filter');
-        renderTransactions();
-      });
-    });
-
-    // Event: Category Filter
-    categoryFilter.addEventListener('change', (e) => {
-      filterCategory = e.target.value;
-      renderTransactions();
-    });
-
-    // Event: Sort Order
-    sortFilter.addEventListener('change', (e) => {
-      sortBy = e.target.value;
-      renderTransactions();
-    });
-
-    // Event: Reset All Filters
-    clearFiltersBtn.addEventListener('click', () => {
-      searchTerm = '';
-      searchInput.value = '';
-      filterType = 'all';
-      filterCategory = 'all';
-      categoryFilter.value = 'all';
-      sortBy = 'date-desc';
-      sortFilter.value = 'date-desc';
-
-      typeButtons.forEach((b, idx) => {
-        if (idx === 0) {
-          b.className = 'type-filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-white text-indigo-700 shadow-sm transition';
-        } else {
-          b.className = 'type-filter-btn px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-lg transition';
-        }
-      });
-
-      renderTransactions();
-      showToast('Filters reset', 'info');
-    });
-
-    // Event: Currency Selection
-    currencySelector.addEventListener('change', (e) => {
-      currentCurrency = e.target.value;
-      formCurrencyLabel.textContent = currentCurrency;
-      saveTransactions();
-      updateMetrics();
-      renderTransactions();
-      showToast(`Currency changed to ${currentCurrency}`, 'info');
-    });
-
-    // Event: Export CSV
-    exportCsvBtn.addEventListener('click', () => {
-      if (transactions.length === 0) {
-        showToast('No records available to export.', 'info');
-        return;
-      }
-
-      const headers = ['Date', 'Title', 'Category', 'Type', 'Amount'];
-      const rows = transactions.map(t => [
-        `"${t.date}"`,
-        `"${t.title.replace(/"/g, '""')}"`,
-        `"${t.category}"`,
-        `"${t.type}"`,
-        t.amount
-      ]);
-
-      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `Apex_Spend_Export_${new Date().toISOString().slice(0, 10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('Transactions exported as CSV!', 'success');
-    });
-
-    // Initial Load
-    window.addEventListener('DOMContentLoaded', () => {
-      loadTransactions();
-      
-      // If first time visit with zero records, add a couple of friendly demo items
-      if (transactions.length === 0) {
-        const today = new Date().toISOString().split('T')[0];
-        transactions = [
-          {
-            id: 'tx_demo_1',
-            title: 'Monthly Salary',
-            amount: 4500.00,
-            category: 'Salary',
-            date: today,
-            type: 'income',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'tx_demo_2',
-            title: 'Apartment Rent',
-            amount: 1250.00,
-            category: 'Housing & Rent',
-            date: today,
-            type: 'expense',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'tx_demo_3',
-            title: 'Supermarket Groceries',
-            amount: 142.50,
-            category: 'Food & Dining',
-            date: today,
-            type: 'expense',
-            createdAt: new Date().toISOString()
-          }
-        ];
-        saveTransactions();
-      }
-
-      updateMetrics();
-      renderTransactions();
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
