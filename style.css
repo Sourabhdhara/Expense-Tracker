@@ -48,12 +48,15 @@ body {
   top: 0;
   z-index: 30;
   box-shadow: var(--shadow-sm);
+height: 85px; 
+min-width: fit-content;
+
 }
 
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 0%;
   height: 64px;
   display: flex;
   align-items: center;
@@ -67,7 +70,8 @@ body {
 }
 
 .brand-icon {
-  width: 40px;
+  margin-top: 20px;
+  width: 70px;
   height: 40px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
@@ -78,14 +82,16 @@ body {
 }
 
 .brand h1 {
+  margin-top: 20px;
   font-size: 1.1rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: .95;
 }
 
 .brand p {
   font-size: 0.75rem;
   color: var(--text-muted);
+  padding-top: 5px;
 }
 
 .header-actions {
@@ -98,7 +104,7 @@ body {
   display: flex;
   align-items: center;
   background: #f1f5f9;
-  padding: 6px 12px;
+  padding: 3px 1px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
   font-size: 0.75rem;
@@ -114,6 +120,15 @@ body {
   outline: none;
   cursor: pointer;
   margin-left: 6px;
+}
+.export{
+  padding: 3px 1px;
+   border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: #f1f5f9;
+     color: var(--text-muted);
+   font-weight: 600;
+ 
 }
 
 /* ==========================================================================
